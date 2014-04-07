@@ -737,8 +737,9 @@ class Document(SchemaDocument):
                         l_objs.append(obj)
                         doc[key] = l_objs
                 elif isinstance(struct[key][0], dict):
-                    for no, obj in enumerate(doc[key]):
-                        self._make_reference(obj, struct[key][0], "%s.%s" % (new_path, no))
+                    if key in doc:
+                        for no, obj in enumerate(doc[key]):
+                            self._make_reference(obj, struct[key][0], "%s.%s" % (new_path, no))
 
 
 class R(CustomType):

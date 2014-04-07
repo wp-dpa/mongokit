@@ -701,18 +701,19 @@ class SchemaDocument(dict):
                 if struct[key]:
                     l_objs = []
                     if isinstance(struct[key][0], CustomType):
-                        for obj in doc[key]:
-                            if target == 'bson':
-                                if struct[key][0].python_type is not None:
-                                    if not isinstance(obj, struct[key][0].python_type) and obj is not None:
-                                        self._raise_exception(SchemaTypeError, new_path,
-                                                              "%s must be an instance of %s not %s" % (
-                                                                  new_path, struct[key][0].python_type.__name__,
-                                                                  type(obj).__name__))
-                                obj = struct[key][0].to_bson(obj)
-                            else:
-                                obj = struct[key][0].to_python(obj)
-                            l_objs.append(obj)
+                        if key in doc:
+                            for obj in doc[key]:
+                                if target == 'bson':
+                                    if struct[key][0].python_type is not None:
+                                        if not isinstance(obj, struct[key][0].python_type) and obj is not None:
+                                            self._raise_exception(SchemaTypeError, new_path,
+                                                                  "%s must be an instance of %s not %s" % (
+                                                                      new_path, struct[key][0].python_type.__name__,
+                                                                      type(obj).__name__))
+                                    obj = struct[key][0].to_bson(obj)
+                                else:
+                                    obj = struct[key][0].to_python(obj)
+                                l_objs.append(obj)
                         doc[key] = l_objs
                     elif isinstance(struct[key][0], dict):
                         if doc.get(key):
