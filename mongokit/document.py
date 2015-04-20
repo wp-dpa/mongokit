@@ -236,11 +236,11 @@ class Document(SchemaDocument):
             error = None
             try:
                 super(Document, self).validate()
-            except StructureError, e:
+            except StructureError as e:
                 error = e
-            except KeyError, e:
+            except KeyError as e:
                 error = e
-            except SchemaTypeError, e:
+            except SchemaTypeError as e:
                 error = e
             if error:
                 if not self.migration_handler:
@@ -401,7 +401,10 @@ class Document(SchemaDocument):
         return a pymongo DBRef instance related to the document
         """
         assert '_id' in self, "You must specify an '_id' for using this method"
-        return DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
+        try:
+            return DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
+        except ConnectionError:
+            return DBRef(database=self.__database__, collection=self.__collection__, id=self['_id'])
 
     def save(self, uuid=False, validate=None, safe=True, *args, **kwargs):
         """
