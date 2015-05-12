@@ -55,6 +55,7 @@ class MongoKitConnection(object):
     def __init__(self, *args, **kwargs):
         self._databases = {}
         self._registered_documents = {}
+        self.auth = [kwargs.pop('user', None), kwargs.pop('pass', None)]
 
     def register(self, obj_list):
         decorator = None
@@ -89,11 +90,18 @@ class MongoKitConnection(object):
         if key in self._registered_documents:
             document = self._registered_documents[key]
             try:
-                return getattr(self[document.__database__][document.__collection__], key)
+                if self.auth[0] and self.auth[1]:
+                    handle = self[document.__database__]
+                    handle.authenticate(*self.auth)
+                    return getattr(handle[document.__collection__], key)
+                return getattr(self[
+                    document.__database__][
+                    document.__collection__], key)
             except AttributeError:
-                raise AttributeError("%s: __collection__ attribute not found. "
-                                     "You cannot specify the `__database__` attribute without "
-                                     "the `__collection__` attribute" % key)
+                raise AttributeError(
+                    "{}: __collection__ attribute not found. "
+                    "You cannot specify the `__database__` attribute without "
+                    "the `__collection__` attribute".format(key))
         else:
             if key not in self._databases:
                 self._databases[key] = Database(self, key)
@@ -104,6 +112,9 @@ class Connection(MongoKitConnection, PymongoConnection):
     def __init__(self, *args, **kwargs):
         # Specifying that it should run both the inits
         MongoKitConnection.__init__(self, *args, **kwargs)
+        if 'user' in kwargs:
+            del(kwargs['user'])
+            del(kwargs['pass'])
         PymongoConnection.__init__(self, *args, **kwargs)
 
 

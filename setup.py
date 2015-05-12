@@ -32,21 +32,19 @@ except ImportError:
     ez_setup.use_setuptools()
     from setuptools import setup, find_packages
 
-import os
-import sys
 import codecs
 
 setup(
-    name = 'mongokit',
-    version = '0.9.2',  # TODO don't forget to change version in __init__
+    name='mongokit',
+    version='0.9.3',  # TODO don't forget to change version in __init__
 
-    description = 'Python mongodb kit',
-    long_description = codecs.open('README.md', "r", "utf-8").read(),
-    author = 'Namlook',
-    license = 'New BSD License',
-    url = 'http://namlook.github.com/mongokit/',
+    description='Python mongodb kit',
+    long_description=codecs.open('README.md', "r", "utf-8").read(),
+    author='Namlook',
+    license='New BSD License',
+    url='http://namlook.github.com/mongokit/',
 
-    classifiers = [
+    classifiers=[
         'Development Status :: 5 - Production/Stable',
         'Environment :: Other Environment',
         'Intended Audience :: Developers',
@@ -57,11 +55,11 @@ setup(
         'Topic :: Utilities',
         'Topic :: Software Development :: Libraries :: Python Modules',
     ],
-    packages = find_packages(),
+    packages=find_packages(),
 
-    zip_safe = False,
+    zip_safe=False,
 
-    install_requires = [
+    install_requires=[
         'pymongo>=2.5',
     ]
 
