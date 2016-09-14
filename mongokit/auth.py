@@ -25,9 +25,10 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import Document
 import hashlib
 import os
+
+from mongokit import Document
 
 
 class User(Document):
@@ -40,6 +41,10 @@ class User(Document):
         }
     }
     required_fields = ['user.password', 'user.email']  # what if openid ? password is None
+    use_dot_notation = True
+
+    def __init__(self, *args, **kwargs):
+        super(User, self).__init__(*args, **kwargs)
 
     def set_login(self, login):
         self['_id'] = login

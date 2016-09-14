@@ -1,3 +1,6 @@
+
+**maintainers wanted !** See [#182](https://github.com/namlook/mongokit/issues/182) for more infos.
+
 # MongoKit [![Build Status](https://travis-ci.org/namlook/mongokit.png)](https://travis-ci.org/namlook/mongokit.png)
 
 [MongoDB](http://www.mongodb.org/display/DOCS/Home) is a great schema-less document oriented database. It has a lot of drivers for many languages (python, ruby, perl, java, php...).
@@ -12,9 +15,9 @@ MongoKit is designed to be:
 
  * **simple**: MongoKit uses plain python types to describe document structure
  * **fast**: MongoKit is fast but if you *really* need to be fast you have
-   access to the raw pymongo layer without changing the API **powerful**:
- * MongoKit brings many features like document auto-reference, custom types or
-   i18n support.
+   access to the raw pymongo layer without changing the API
+ * **powerful**: MongoKit brings many features like document auto-reference, 
+   custom types or i18n support.
 
 **Your data is clean:**
 

@@ -27,6 +27,9 @@
 
 import datetime
 import logging
+from copy import deepcopy
+from mongokit.mongo_exceptions import EvalException
+
 log = logging.getLogger(__name__)
 
 
@@ -44,8 +47,6 @@ def fromtimestamp(epoch_date):
     """
     seconds = float(epoch_date) / 1000.0
     return datetime.datetime.utcfromtimestamp(seconds)
-
-from copy import deepcopy
 
 
 class i18nDotedDict(dict):
@@ -74,6 +75,8 @@ class i18nDotedDict(dict):
                     return self[key].get(self._doc._fallback_lang)
                 return self[key][self._doc._current_lang]
             return self[key]
+        else:
+            return super(i18nDotedDict, self).__getattribute__(key)
 
     def __deepcopy__(self, memo={}):
         obj = dict(self)
@@ -107,14 +110,22 @@ class DotedDict(dict):
         if key in self:
             self[key] = value
         else:
-            if self._dot_notation_warning and not key.startswith('_') and\
-               key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
+            # Check for '_' should be first, coz we want to set protected
+            # attrs in __init__ without recursion, i.e. _dot_notation_warning
+            if not key.startswith('_') and self._dot_notation_warning and \
+                    key not in ['db', 'collection', 'versioning_collection', 'connection', 'fs']:
                 log.warning("dot notation: %s was not found in structure. Add it as attribute instead" % key)
             dict.__setattr__(self, key, value)
 
     def __getattr__(self, key):
         if key in self:
             return self[key]
+        else:
+            # kindof bulletproof
+            if key.startswith('_'):
+                return super(DotedDict, self).__getattribute__(key)
+            else:
+                raise AttributeError('Not such attribute {0}'.format(key))
 
     def __deepcopy__(self, memo={}):
         obj = dict(self)
@@ -125,10 +136,6 @@ class DotedDict(dict):
 
     def __setstate__(self, d):
         self.__dict__.update(d)
-
-
-class EvalException(Exception):
-    pass
 
 
 class DotExpandedDict(dict):
@@ -155,6 +162,7 @@ class DotExpandedDict(dict):
     """
     # code taken from Django source code http://code.djangoproject.com/
     def __init__(self, key_to_list_mapping):
+        super(DotExpandedDict, self).__init__()
         for k, v in key_to_list_mapping.items():
             current = self
             bits = k.split('.')
@@ -198,6 +206,7 @@ class DotCollapsedDict(dict):
 
     """
     def __init__(self, passed_dict, remove_under_type=False, reference=None):
+        super(DotCollapsedDict, self).__init__()
         self._remove_under_type = remove_under_type
         assert isinstance(passed_dict, dict), "you must pass a dict instance"
         final_dict = {}

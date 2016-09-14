@@ -25,19 +25,26 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 # SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-from mongokit import SchemaDocument, AutoReferenceError
-from mongokit.mongo_exceptions import *
+from mongokit.mongo_exceptions import AutoReferenceError
+from mongokit.mongo_exceptions import OptionConflictError
+from mongokit.mongo_exceptions import BadIndexError
+from mongokit.mongo_exceptions import MaxDocumentSizeError
+from mongokit.mongo_exceptions import MultipleResultsFound
+from mongokit.mongo_exceptions import ConnectionError
+from mongokit.mongo_exceptions import OperationFailure
+
 from mongokit.schema_document import (
     STRUCTURE_KEYWORDS,
     CustomType,
     SchemaTypeError,
     SchemaProperties,
+    SchemaDocument,
     StructureError)
 from mongokit.helpers import (
     totimestamp,
     fromtimestamp,
     DotedDict)
-from mongokit.grid import *
+from mongokit.grid import FS
 import pymongo
 from bson import BSON
 from bson.binary import Binary
@@ -56,7 +63,7 @@ log = logging.getLogger(__name__)
 
 
 class DocumentProperties(SchemaProperties):
-    def __new__(cls, name, bases, attrs):
+    def __new__(mcs, name, bases, attrs):
         for base in bases:
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
@@ -68,10 +75,10 @@ class DocumentProperties(SchemaProperties):
                         for index in attrs['indexes']+parent.indexes:
                             if index not in attrs['indexes']:
                                 attrs['indexes'].append(index)
-        return SchemaProperties.__new__(cls, name, bases, attrs)
+        return SchemaProperties.__new__(mcs, name, bases, attrs)
 
     @classmethod
-    def _validate_descriptors(cls, attrs):
+    def _validate_descriptors(mcs, attrs):
         SchemaProperties._validate_descriptors(attrs)
         # validate index descriptor
         if attrs.get('migration_handler') and attrs.get('use_schemaless'):
@@ -163,7 +170,7 @@ class Document(SchemaDocument):
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, gen_auth_types=False,
+        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, _gen_auth_types=False,
                                        lang=lang, fallback_lang=fallback_lang)
         if self.type_field in self:
             self[self.type_field] = unicode(self.__class__.__name__)
@@ -464,7 +471,7 @@ class Document(SchemaDocument):
                     if isinstance(field, basestring):
                         field = (field, 1)
                     fields.append(field)
-            log.debug('Creating index for %s' % str(given_fields))
+            log.debug('Creating index for {}'.format(str(given_fields)))
             collection.ensure_index(fields, unique=unique, ttl=ttl, **index)
 
     def to_json_type(self):
