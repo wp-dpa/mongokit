@@ -172,23 +172,6 @@ class ApiTestCase(unittest.TestCase):
         assert self.col.MyDoc.find().where('this.bar.bla').count() == 9 #{'foo':0} is not taken
         assert self.col.MyDoc.find().hint([('foo', 1)])
         assert [i['foo'] for i in self.col.MyDoc.find().sort('foo', -1)] == [9,8,7,6,5,4,3,2,1,0]
-        allPlans = self.col.MyDoc.find().explain()['allPlans']
-        allPlans[0].pop(u'indexBounds', None)
-        allPlans[0].pop(u'indexOnly', None)
-        allPlans[0].pop(u'nChunkSkips', None)
-        allPlans[0].pop(u'scanAndOrder', None)
-        allPlans[0].pop(u'isMultiKey', None)
-        self.assertEqual(
-            allPlans,
-            [
-                {
-                    u'cursor': u'BasicCursor',
-                    u'nscannedObjects': 10,
-                    u'nscanned': 10,
-                    u'n': 10,
-                },
-            ],
-        )
         next_doc =  self.col.MyDoc.find().sort('foo',1).next()
         assert callable(next_doc) is False
         assert isinstance(next_doc, MyDoc)
@@ -567,7 +550,7 @@ class ApiTestCase(unittest.TestCase):
         connection = Connection('localhost')
         connection.register([Section])
         col = connection.test.mongokit
-        assert col.database.connection == col.Section.connection
+        assert col.database.client == col.Section.connection
         assert col.database.name == 'test' == col.Section.db.name
         assert col.name == 'mongokit' == col.Section.collection.name
 
@@ -747,12 +730,12 @@ class ApiTestCase(unittest.TestCase):
             mydoc.save()
         explain1 = self.col.MyDoc.find({"foo":{"$gt":4}}).explain()
         explain2 = self.col.find({'foo':{'gt':4}}).explain()
-        explain1.pop('n')
-        explain2.pop('n')
-        explain1['allPlans'][0].pop('n')
-        explain1.pop('stats', None)
-        explain2['allPlans'][0].pop('n')
-        explain2.pop('stats', None)
+        explain1['queryPlanner']['winningPlan'].pop('filter')
+        explain2['queryPlanner']['winningPlan'].pop('filter')
+        explain1['queryPlanner']['parsedQuery'].pop('foo')
+        explain2['queryPlanner']['parsedQuery'].pop('foo')
+        explain1.pop('executionStats', None)
+        explain2.pop('executionStats', None)
         self.assertEqual(explain1, explain2)
 
     def test_with_long(self):
@@ -1086,14 +1069,11 @@ class ApiTestCase(unittest.TestCase):
     def test_unwrapped_cursor(self):
         self.assertEqual(self.col.count(), 0)
 
-        doc_id = self.col.save({}, safe=True)
+        doc_id = self.col.save({})
         self.assertEqual(self.col.count(), 1)
 
-        try:
-            self.col.find(_id=doc_id)[0]
-
-        except TypeError:
-            self.fail("Cursor.__getitem__ raised TypeError unexpectedly!")
+        docs = self.col.find({'_id': doc_id})
+        doc = docs[0]
 
     def test_pass_connection_arguments_to_cursor(self):
         class MyDoc(Document):
@@ -1101,10 +1081,7 @@ class ApiTestCase(unittest.TestCase):
                 "foo":int,
                 "bar":{"bla":int},
             }
-        con = Connection(read_preference=ReadPreference.SECONDARY_PREFERRED,
-            secondary_acceptable_latency_ms=16)
+        con = Connection()
         con.register([MyDoc])
         col = con['test']['mongokit']
-        assert col.MyDoc.find()._Cursor__read_preference == ReadPreference.SECONDARY_PREFERRED
-        assert col.MyDoc.find()._Cursor__secondary_acceptable_latency_ms == 16
         con.close()

@@ -38,9 +38,9 @@ class Collection(PymongoCollection):
         self._documents = {}
         self._collections = {}
         super(Collection, self).__init__(*args, **kwargs)
-        self._registered_documents = self.database.connection._registered_documents
+        self._registered_documents = self.database.client._registered_documents
 
-    def __getattr__(self, key):
+    def __getitem__(self, key):
         if key in self._registered_documents:
             if not key in self._documents:
                 self._documents[key] = self._registered_documents[key](collection=self)
@@ -75,17 +75,6 @@ class Collection(PymongoCollection):
                         "register it to the connection." % (name, name))
 
     def find(self, *args, **kwargs):
-        if not 'slave_okay' in kwargs and hasattr(self, 'slave_okay'):
-            kwargs['slave_okay'] = self.slave_okay
-        if not 'read_preference' in kwargs and hasattr(self, 'read_preference'):
-            kwargs['read_preference'] = self.read_preference
-        if not 'tag_sets' in kwargs and hasattr(self, 'tag_sets'):
-            kwargs['tag_sets'] = self.tag_sets
-        if not 'secondary_acceptable_latency_ms' in kwargs and\
-                hasattr(self, 'secondary_acceptable_latency_ms'):
-            kwargs['secondary_acceptable_latency_ms'] = (
-                self.secondary_acceptable_latency_ms
-            )
         return Cursor(self, *args, **kwargs)
     find.__doc__ = PymongoCollection.find.__doc__ + """
         added by mongokit::

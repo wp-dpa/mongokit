@@ -31,7 +31,7 @@ from mongokit import Document, Connection
 
 class InheritedQueriesTestCase(unittest.TestCase):
     def setUp(self):
-        self.connection = Connection(safe=True)
+        self.connection = Connection()
         self.col = self.connection['test']['mongolite']
         
     def tearDown(self):

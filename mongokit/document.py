@@ -68,7 +68,6 @@ class DocumentProperties(SchemaProperties):
             parent = base.__mro__[0]
             if hasattr(parent, 'structure'):
                 if parent.structure is not None:
-                    #parent = parent()
                     if parent.indexes:
                         if 'indexes' not in attrs:
                             attrs['indexes'] = []
@@ -82,7 +81,9 @@ class DocumentProperties(SchemaProperties):
         SchemaProperties._validate_descriptors(attrs)
         # validate index descriptor
         if attrs.get('migration_handler') and attrs.get('use_schemaless'):
-            raise OptionConflictError('You cannot set a migration_handler with use_schemaless set to True')
+            raise OptionConflictError(
+                'You cannot set a migration_handler with use_schemaless'
+                ' set to True')
         if attrs.get('indexes'):
             for index in attrs['indexes']:
                 if index.get('check', True):
@@ -92,52 +93,91 @@ class DocumentProperties(SchemaProperties):
                     for key, value in index.iteritems():
                         if key == "fields":
                             if isinstance(value, basestring):
-                                if value not in attrs['_namespaces'] and value not in STRUCTURE_KEYWORDS:
+                                if (
+                                        value not in attrs['_namespaces'] and
+                                        value not in STRUCTURE_KEYWORDS):
                                     raise ValueError(
-                                        "Error in indexes: can't find %s in structure" % value)
+                                        'Error in indexes: can\'t find {} in '
+                                        'structure'.format(value))
                             elif isinstance(value, tuple):
                                 if len(value) != 2:
                                     raise BadIndexError(
-                                        "Error in indexes: a tuple must contain "
-                                        "only two value : the field name and the direction")
-                                if not (isinstance(value[1], int) or isinstance(value[1], basestring)):
+                                        'Error in indexes: a tuple must '
+                                        'contain only two value : the '
+                                        'field name and the direction')
+                                if (not (
+                                        isinstance(value[1], int) or
+                                        isinstance(value[1], basestring))):
                                     raise BadIndexError(
-                                        "Error in %s, the direction must be int or basestring "
-                                        "(got %s instead)" % (value[0], type(value[1])))
+                                        'Error in {}, the direction must be '
+                                        'int or basestring '
+                                        '(got {} instead)'.format(
+                                            value[0], type(value[1])))
                                 if not isinstance(value[0], basestring):
                                     raise BadIndexError(
-                                        "Error in %s, the field name must be string "
-                                        "(got %s instead)" % (value[0], type(value[0])))
-                                if value[0] not in attrs['_namespaces'] and value[0] not in STRUCTURE_KEYWORDS:
+                                        'Error in {}, the field name must be '
+                                        'string (got {} instead)'.format(
+                                            value[0], type(value[0])))
+                                if (
+                                        value[0] not in attrs['_namespaces']
+                                        and
+                                        value[0] not in STRUCTURE_KEYWORDS):
                                     raise ValueError(
-                                        "Error in indexes: can't find %s in structure" % value[0])
-                                if not value[1] in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF, pymongo.ALL,
-                                                    pymongo.GEO2D, pymongo.GEOHAYSTACK, pymongo.GEOSPHERE,
-                                                    pymongo.HASHED, "text"]:
+                                        'Error in indexes: can\'t find {} in '
+                                        'structure'.format(value[0]))
+                                if not value[1] in [
+                                        pymongo.DESCENDING, pymongo.ASCENDING,
+                                        pymongo.OFF, pymongo.ALL,
+                                        pymongo.GEO2D, pymongo.GEOHAYSTACK,
+                                        pymongo.GEOSPHERE, pymongo.HASHED,
+                                        "text"]:
+                                    # Omit text because it's still beta
                                     raise BadIndexError(
-                                        "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, "
-                                        "INDEX_OFF, INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, "
-                                        "or INDEX_GEOSPHERE. Got %s" % value[1])  # Omit text because it's still beta
+                                        'index direction must be '
+                                        'INDEX_DESCENDING, INDEX_ASCENDING, '
+                                        'INDEX_OFF, INDEX_ALL, INDEX_GEO2D, '
+                                        'INDEX_GEOHAYSTACK or '
+                                        'INDEX_GEOSPHERE. Got {}'.format(
+                                            value[1]))
                             elif isinstance(value, list):
                                 for val in value:
                                     if isinstance(val, tuple):
-                                        field, direction = val
-                                        if field not in attrs['_namespaces'] and field not in STRUCTURE_KEYWORDS:
+                                        fld, direction = val
+                                        if (
+                                                fld not in attrs['_namespaces']
+                                                and
+                                                fld not in STRUCTURE_KEYWORDS):
                                             raise ValueError(
-                                                "Error in indexes: can't find %s in structure" % field)
-                                        if not direction in [pymongo.DESCENDING, pymongo.ASCENDING, pymongo.OFF,
-                                                             pymongo.ALL, pymongo.GEO2D, pymongo.GEOHAYSTACK,
-                                                             pymongo.GEOSPHERE, "text"]:
+                                                'Error in indexes: can\'t find'
+                                                ' {} in structure'.format(fld))
+                                        if direction not in [
+                                                pymongo.DESCENDING,
+                                                pymongo.ASCENDING, pymongo.OFF,
+                                                pymongo.ALL, pymongo.GEO2D,
+                                                pymongo.GEOHAYSTACK,
+                                                pymongo.GEOSPHERE, "text"]:
+                                            # Omit text because it's still beta
                                             raise BadIndexError(
-                                                "index direction must be INDEX_DESCENDING, INDEX_ASCENDING, INDEX_OFF, "
-                                                "INDEX_ALL, INDEX_GEO2D, INDEX_GEOHAYSTACK, or INDEX_GEOSPHERE."
-                                                " Got %s" % direction)  # Omit text because it's still beta
+                                                'index direction must be '
+                                                'INDEX_DESCENDING, '
+                                                'INDEX_ASCENDING, INDEX_OFF, '
+                                                'INDEX_ALL, INDEX_GEO2D, '
+                                                'INDEX_GEOHAYSTACK or '
+                                                'INDEX_GEOSPHERE. '
+                                                'Got {}'.format(direction))
                                     else:
-                                        if val not in attrs['_namespaces'] and val not in STRUCTURE_KEYWORDS:
-                                            raise ValueError("Error in indexes: can't find %s in structure" % val)
+                                        if (
+                                                val not in attrs['_namespaces']
+                                                and
+                                                val not in STRUCTURE_KEYWORDS):
+                                            raise ValueError(
+                                                'Error in indexes: can\'t find'
+                                                ' {} in structure'.format(val))
                             else:
-                                raise BadIndexError("fields must be a string, a tuple or a list of tuple "
-                                                    "(got %s instead)" % type(value))
+                                raise BadIndexError(
+                                    'Fields must be a string, a tuple or a '
+                                    'list of tuple (got {} instead)'.format(
+                                        type(value)))
                         elif key == "ttl":
                             assert isinstance(value, int)
 
@@ -165,20 +205,24 @@ class Document(SchemaDocument):
         type(re.compile("")),
     ]
 
-    def __init__(self, doc=None, gen_skel=True, collection=None, lang='en', fallback_lang='en'):
+    def __init__(
+            self, doc=None, gen_skel=True, collection=None,
+            lang='en', fallback_lang='en'):
         self._authorized_types = self.authorized_types[:]
+
         # If using autorefs, we need another authorized
         if self.use_autorefs:
             self._authorized_types += [Document, SchemaProperties]
-        super(Document, self).__init__(doc=doc, gen_skel=gen_skel, _gen_auth_types=False,
-                                       lang=lang, fallback_lang=fallback_lang)
+        super(Document, self).__init__(
+            doc=doc, gen_skel=gen_skel, _gen_auth_types=False,
+            lang=lang, fallback_lang=fallback_lang)
         if self.type_field in self:
             self[self.type_field] = unicode(self.__class__.__name__)
         # collection
         self.collection = collection
         if collection:
             self.db = collection.database
-            self.connection = self.db.connection
+            self.connection = self.db.client
             # indexing all embed doc if any (autorefs feature)
             self._dbrefs = {}
             if self.use_autorefs and collection:
@@ -194,31 +238,33 @@ class Document(SchemaDocument):
             if self.get('_id'):
                 Document.validate(self, auto_migrate=True)
         if self.atomic_save is True:
-            raise DeprecationWarning('atomic_save is not supported anymore. Please update you code')
+            raise DeprecationWarning(
+                'atomic_save is not supported anymore. '
+                'Please update you code')
 
-    def migrate(self, safe=True, _process_to_bson=True):
+    def migrate(self, _process_to_bson=True):
         """
         migrate the document following the migration_handler rules
-
-        safe : if True perform a safe update (see pymongo documentation for more details
         """
-        self._migrate(safe=safe)
+        self._migrate()
 
-    def _migrate(self, safe=True, process_to_bson=True):
+    def _migrate(self, process_to_bson=True):
         if process_to_bson:
             self._process_custom_type('bson', self, self.structure)
-        self._migration.migrate(self, safe=safe)
+        self._migration.migrate(self)
         # reload
         old_doc = self.collection.get_from_id(self['_id'])
         if not old_doc:
-            raise OperationFailure('Can not reload an unsaved document.'
-                                   ' %s is not found in the database' % self['_id'])
+            raise OperationFailure(
+                'Can not reload an unsaved document. {}'
+                ' is not found in the database'.format(self['_id']))
         else:
             self.update(DotedDict(old_doc))
         self._process_custom_type('python', self, self.structure)
 
     def _get_size_limit(self):
-        server_version = tuple(self.connection.server_info()['version'].split("."))
+        server_version = tuple(
+            self.connection.server_info()['version'].split("."))
         mongo_1_8 = tuple("1.8.0".split("."))
 
         if server_version < mongo_1_8:
@@ -237,8 +283,10 @@ class Document(SchemaDocument):
         (size_limit, size_limit_str) = self._get_size_limit()
 
         if size > size_limit:
-            raise MaxDocumentSizeError("The document size is too big, documents "
-                                       "lower than %s is allowed (got %s bytes)" % (size_limit_str, size))
+            raise MaxDocumentSizeError(
+                'The document size is too big, documents lower than {} '
+                'is allowed (got {} bytes)'.format(size_limit_str, size))
+
         if auto_migrate:
             error = None
             try:
@@ -296,7 +344,8 @@ class Document(SchemaDocument):
         """
         Update and return an object.
         """
-        return self.collection.find_and_modify(wrap=self._obj_class, *args, **kwargs)
+        return self.collection.find_and_modify(
+            wrap=self._obj_class, *args, **kwargs)
 
     def find_one(self, *args, **kwargs):
         """
@@ -337,9 +386,11 @@ class Document(SchemaDocument):
 
     def find_fulltext(self, search, **kwargs):
         """
-        Executes a full-text search. Additional parameters may be passed as keyword arguments.
+        Executes a full-text search.
+        Additional parameters may be passed as keyword arguments.
         """
-        rv = self.collection.database.command("text", self.collection.name, search=search, **kwargs)
+        rv = self.collection.database.command(
+            "text", self.collection.name, search=search, **kwargs)
         if 'results' in rv:
             for res in rv['results']:
                 res['obj'] = self._obj_class(res['obj'])
@@ -354,7 +405,8 @@ class Document(SchemaDocument):
     def fetch(self, spec=None, *args, **kwargs):
         """
         return all document which match the structure of the object
-        `fetch()` takes the same arguments than the the pymongo.collection.find method.
+        `fetch()` takes the same arguments as the
+        pymongo.collection.find method.
 
         The query is launch against the db and collection of the object.
         """
@@ -371,9 +423,11 @@ class Document(SchemaDocument):
     def fetch_one(self, *args, **kwargs):
         """
         return one document which match the structure of the object
-        `fetch_one()` takes the same arguments than the the pymongo.collection.find method.
+        `fetch_one()` takes the same arguments as the
+        pymongo.collection.find method.
 
-        If multiple documents are found, raise a MultipleResultsFound exception.
+        If multiple documents are found, raise a MultipleResultsFound
+        exception.
         If no document is found, return None
 
         The query is launch against the db and collection of the object.
@@ -397,8 +451,9 @@ class Document(SchemaDocument):
         self._process_custom_type('bson', self, self.structure)
         old_doc = self.collection.get_from_id(self['_id'])
         if not old_doc:
-            raise OperationFailure('Can not reload an unsaved document.'
-                                   ' %s is not found in the database' % self['_id'])
+            raise OperationFailure(
+                'Can not reload an unsaved document. {} is not found '
+                'in the database'.format(self['_id']))
         else:
             self.update(DotedDict(old_doc))
         self._process_custom_type('python', self, self.structure)
@@ -409,11 +464,15 @@ class Document(SchemaDocument):
         """
         assert '_id' in self, "You must specify an '_id' for using this method"
         try:
-            return DBRef(database=self.db.name, collection=self.collection.name, id=self['_id'])
+            return DBRef(
+                database=self.db.name, collection=self.collection.name,
+                id=self['_id'])
         except ConnectionError:
-            return DBRef(database=self.__database__, collection=self.__collection__, id=self['_id'])
+            return DBRef(
+                database=self.__database__, collection=self.__collection__,
+                id=self['_id'])
 
-    def save(self, uuid=False, validate=None, safe=True, *args, **kwargs):
+    def save(self, uuid=False, validate=None, *args, **kwargs):
         """
         save the document into the db.
 
@@ -426,16 +485,18 @@ class Document(SchemaDocument):
 
         `save()` follow the pymongo.collection.save arguments
         """
-        if validate is True or (validate is None and self.skip_validation is False):
+        if validate is True or (
+                validate is None and self.skip_validation is False):
             self.validate(auto_migrate=False)
         else:
             if self.use_autorefs:
                 self._make_reference(self, self.structure)
         if '_id' not in self:
             if uuid:
-                self['_id'] = unicode("%s-%s" % (self.__class__.__name__, uuid4()))
+                self['_id'] = unicode("{}-{}".format(
+                    self.__class__.__name__, uuid4()))
         self._process_custom_type('bson', self, self.structure)
-        self.collection.save(self, safe=safe, *args, **kwargs)
+        self.collection.save(self, *args, **kwargs)
         self._process_custom_type('python', self, self.structure)
 
     def delete(self):
@@ -446,9 +507,11 @@ class Document(SchemaDocument):
 
     @classmethod
     def generate_index(cls, collection):
-        """generate indexes from ``indexes`` class-attribute
+        """
+        generate indexes from ``indexes`` class-attribute
 
-        supports additional index-creation-keywords supported by pymongos ``ensure_index``.
+        supports additional index-creation-keywords supported by
+        pymongos ``ensure_index``.
         """
         # creating index if needed
         for index in deepcopy(cls.indexes):

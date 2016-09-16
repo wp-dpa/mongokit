@@ -86,14 +86,10 @@ class MongoKitConnection(object):
         if decorator is not None:
             return decorator
 
-    def __getattr__(self, key):
+    def __getitem__(self, key):
         if key in self._registered_documents:
             document = self._registered_documents[key]
             try:
-                if self.auth[0] and self.auth[1]:
-                    handle = self[document.__database__]
-                    handle.authenticate(*self.auth)
-                    return getattr(handle[document.__collection__], key)
                 return getattr(self[
                     document.__database__][
                     document.__collection__], key)

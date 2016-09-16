@@ -56,7 +56,7 @@ class DocumentMigration(object):
                         raise UpdateQueryError("'%s' not found in %s's structure" % (
                             field, self.doc_class.__name__))
 
-    def migrate(self, doc, safe=True):
+    def migrate(self, doc):
         """migrate the doc through all migration process"""
         method_names = sorted([i for i in dir(self) if i.startswith('migration')])
         for method_name in method_names:
@@ -66,7 +66,7 @@ class DocumentMigration(object):
             if self.target and self.update:
                 if '_id' in doc:
                     self.target['_id'] = doc['_id']
-                doc.collection.update(self.target, self.update, multi=False, safe=safe)
+                doc.collection.update(self.target, self.update, multi=False)
                 # reload
                 try:
                     doc.update(doc.collection.get_from_id(doc['_id']))
@@ -75,7 +75,7 @@ class DocumentMigration(object):
                                            '%s is not found in the database' % doc['_id'])
                 # self.reload()
 
-    def migrate_all(self, collection, safe=True):
+    def migrate_all(self, collection):
         method_names = sorted([i for i in dir(self) if i.startswith('allmigration')])
         for method_name in method_names:
             self.clean()
@@ -83,7 +83,7 @@ class DocumentMigration(object):
             getattr(self, method_name)()
             if self.target and self.update:
                 self.validate_update(self.update)
-                collection.update(self.target, self.update, multi=True, safe=safe)
+                collection.update(self.target, self.update, multi=True)
                 status = collection.database.last_status()
                 if not status.get('updatedExisting', 1):
                     print "%s : %s >>> deprecated" % (self.__class__.__name__, method_name)
