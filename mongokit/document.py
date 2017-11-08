@@ -518,9 +518,6 @@ class Document(SchemaDocument):
             unique = False
             if 'unique' in index:
                 unique = index.pop('unique')
-            ttl = 300
-            if 'ttl' in index:
-                ttl = index.pop('ttl')
 
             given_fields = index.pop("fields", list())
 
@@ -535,7 +532,7 @@ class Document(SchemaDocument):
                         field = (field, 1)
                     fields.append(field)
             log.debug('Creating index for {}'.format(str(given_fields)))
-            collection.ensure_index(fields, unique=unique, ttl=ttl, **index)
+            collection.ensure_index(fields, unique=unique, **index)
 
     def to_json_type(self):
         """
